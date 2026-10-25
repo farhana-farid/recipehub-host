@@ -1,0 +1,31 @@
+{
+  "name": "RecipeHub — Cook smarter. Eat better",
+  "short_name": "RecipeHub",
+  "description": "Video-first recipe discovery: step-synced cooking videos, pantry matcher and hands-free cooking mode.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF9F6",
+  "theme_color": "#ED7D2B",
+  "categories": ["food", "lifestyle", "education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "What can I cook?",
+      "short_name": "Pantry",
+      "url": "/pantry",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search recipes",
+      "short_name": "Search",
+      "url": "/search",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

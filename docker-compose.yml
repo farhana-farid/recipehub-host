@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: recipehub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: recipehub
+      POSTGRES_PASSWORD: recipehub
+      POSTGRES_DB: recipehub
+    ports:
+      - "5433:5432"
+    volumes:
+      - recipehub_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recipehub -d recipehub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  recipehub_pgdata:

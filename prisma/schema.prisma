@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum RecipeStatus {
+  PUBLISHED
+  PENDING_REVIEW
+  REJECTED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum VideoPlatform {
+  YOUTUBE
+  YOUTUBE_SHORTS
+  INSTAGRAM_REEL
+  TIKTOK
+  FACEBOOK_REEL
+}
+
+model User {
+  id             String     @id @default(cuid())
+  email          String     @unique
+  name           String
+  hashedPassword String
+  avatarEmoji    String     @default("🧑‍🍳")
+  role           UserRole   @default(USER)
+  createdAt      DateTime   @default(now())
+
+  sessions    Session[]
+  recipes     Recipe[]
+  collections Collection[]
+  favorites   Favorite[]
+  reviews     Review[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Recipe {
+  id            String       @id @default(cuid())
+  slug          String       @unique
+  title         String
+  titleBn       String?
+  description   String
+  descriptionBn String?
+  image         String
+  cuisine       String
+  difficulty    Difficulty   @default(EASY)
+  baseServings  Int          @default(2)
+  prepMinutes   Int          @default(10)
+  cookMinutes   Int          @default(20)
+  calories      Int
+  protein       Int
+  carbs         Int
+  fat           Int
+  tags          String[]     @default([])
+  dietTags      String[]     @default([])
+  allergens     String[]     @default([])
+  status        RecipeStatus @default(PUBLISHED)
+  authorId      String?
+  createdAt     DateTime     @default(now())
+
+  author      User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  ingredients RecipeIngredient[]
+  steps       CookingStep[]
+  videos      Video[]
+  favorites   Favorite[]
+  collections CollectionRecipe[]
+  reviews     Review[]
+
+  @@index([cuisine])
+  @@index([status])
+}
+
+model Ingredient {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  nameBn      String?
+  // normalized match key, e.g. "chicken breast" -> "chicken"
+  key         String  @unique
+  substitutes String[] @default([])
+
+  recipes RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  recipeId     String
+  ingredientId String
+  quantity     Float?
+  unit         String?
+  note         String?
+  optional     Boolean @default(false)
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, ingredientId])
+  @@index([ingredientId])
+}
+
+model CookingStep {
+  id           String  @id @default(cuid())
+  recipeId     String
+  order        Int
+  text         String
+  textBn       String?
+  tip          String?
+  tipBn        String?
+  timerSeconds Int?
+  // Optional clip of the recipe's primary video, in seconds
+  videoStart   Int?
+  videoEnd     Int?
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, order])
+}
+
+model Video {
+  id            String        @id @default(cuid())
+  recipeId      String
+  platform      VideoPlatform
+  originalUrl   String
+  videoId       String
+  creatorName   String
+  creatorHandle String?
+  thumbnailUrl  String?
+  isPrimary     Boolean       @default(false)
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+}
+
+model Collection {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  emoji     String   @default("📚")
+  createdAt DateTime @default(now())
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes  CollectionRecipe[]
+
+  @@unique([userId, name])
+}
+
+model CollectionRecipe {
+  collectionId String
+  recipeId     String
+  addedAt      DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, recipeId])
+}
+
+model Favorite {
+  userId    String
+  recipeId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, recipeId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  recipeId  String
+  userId    String
+  rating    Int
+  body      String?
+  flagged   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, userId])
+  @@index([recipeId])
+}
